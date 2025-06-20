@@ -1,0 +1,27 @@
+{
+  "name": "mcp-relay",
+  "author": "David Oelfke",
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "Manage your MCP servers in one place",
+  "main": "dist/index.js",
+  "keywords": [
+    "mcp",
+    "relay",
+    "ai"
+  ],
+  "scripts": {
+    "build": "tsc && npm run copy-static",
+    "start": "electron dist/main.js",
+    "dev": "tsc && electron dist/main.js",
+    "watch": "tsc --watch",
+    "copy-static": "mkdir -p dist/assets && cp src/index.html dist/ && cp -R assets/* dist/assets/"
+  },
+  "devDependencies": {
+    "@types/electron": "^1.4.38",
+    "@types/node": "^20.0.0",
+    "electron": "^36.5.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
