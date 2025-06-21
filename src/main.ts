@@ -1,9 +1,26 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage } from "electron";
 import * as path from "path";
+import express from "express";
 
 let tray: Tray;
 let mainWindow: BrowserWindow;
 let isQuitting = false;
+
+const webServer = express();
+const serverPort = 9191;
+
+async function createWebServer() {
+  webServer.use(express.json());
+  webServer.use(express.urlencoded({ extended: true }));
+
+  webServer.get("/", (req, res) => {
+    res.json({ status: "healthy", uptime: process.uptime() });
+  });
+
+  webServer.listen(serverPort, () => {
+    console.log(`Web server running on http://localhost:${serverPort}`);
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -14,6 +31,8 @@ function createWindow() {
     skipTaskbar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
@@ -21,6 +40,13 @@ function createWindow() {
 
   if (process.env.NODE_ENV === "development") {
     mainWindow.webContents.openDevTools();
+
+    // Suppress common DevTools warnings
+    mainWindow.webContents.on("console-message", (event, level, message) => {
+      if (message.includes("Autofill.enable")) {
+        return; // Suppress autofill warnings
+      }
+    });
   }
 
   mainWindow.on("close", (event) => {
@@ -66,9 +92,15 @@ function createTray() {
   tray.setToolTip("MCP Relay");
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow();
   createTray();
+
+  try {
+    await createWebServer();
+  } catch (error) {
+    console.error("Failed to start web server:", error);
+  }
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
