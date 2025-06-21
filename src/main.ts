@@ -9,16 +9,19 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    show: false,
+    show: process.env.NODE_ENV === "development",
     minimizable: false,
+    skipTaskbar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      nodeIntegration: true,
-      contextIsolation: false,
     },
   });
 
   mainWindow.loadFile(path.join(__dirname, "index.html"));
+
+  if (process.env.NODE_ENV === "development") {
+    mainWindow.webContents.openDevTools();
+  }
 
   mainWindow.on("close", (event) => {
     if (!isQuitting) {
